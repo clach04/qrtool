@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)">
+<meta name="description" content="Offline single-page QR code scanner and QR/barcode generator with local history.">
+<title>QR &amp; Barcode Scanner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cg fill='%23fff'%3E%3Cpath d='M6 6h8v8H6zm2 2v4h4V8z'/%3E%3Cpath d='M18 6h8v8h-8zm2 2v4h4V8z'/%3E%3Cpath d='M6 18h8v8H6zm2 2v4h4v-4z'/%3E%3Cpath d='M18 18h3v3h-3zm5 0h3v3h-3zm-5 5h3v3h-3zm5 0h3v3h-3z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="app-bar">
+  <div class="app-bar__title">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="26" height="26"><rect width="32" height="32" rx="7" fill="currentColor"/><g fill="#fff"><path d="M6 6h8v8H6zm2 2v4h4V8z"/><path d="M18 6h8v8h-8zm2 2v4h4V8z"/><path d="M6 18h8v8H6zm2 2v4h4v-4z"/><path d="M18 18h3v3h-3zm5 0h3v3h-3zm-5 5h3v3h-3zm5 0h3v3h-3z"/></g></svg>
+    </span>
+    <span>Scan &amp; Create</span>
+  </div>
+  <button id="themeBtn" class="icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 0 1 11.5 3.1c-.44-.06-.9-.1-1.36-.1z"/></svg>
+  </button>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab is-active" role="tab" id="tab-scan" aria-selected="true" aria-controls="panel-scan" data-panel="scan" type="button">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4zM8 8h3v3H8V8zm5 0h3v3h-3V8zM8 13h3v3H8v-3zm5 3h3v2h-3v-2z"/></svg>
+    <span>Scan</span>
+  </button>
+  <button class="tab" role="tab" id="tab-create" aria-selected="false" aria-controls="panel-create" data-panel="create" type="button">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4zM8 8h3v3H8V8zm5 0h3v3h-3V8zM8 13h3v3H8v-3zm5 3h3v2h-3v-2z"/></svg>
+    <span>Create</span>
+  </button>
+  <button class="tab" role="tab" id="tab-history" aria-selected="false" aria-controls="panel-history" data-panel="history" type="button">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 9.54 13h-2.1A8 8 0 1 1 12 4c2.2 0 4.2.9 5.66 2.34L14 10h7V3l-2.64 2.64A9.97 9.97 0 0 0 12 2zm-1 5v6l5 3 .99-1.65-4.16-2.47V7H11z"/></svg>
+    <span>History</span>
+    <span class="badge" id="histBadge" hidden>0</span>
+  </button>
+</nav>
+
+<main>
+  <!-- ======================= SCAN ======================= -->
+  <section class="panel is-active" id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
+
+    <div class="card">
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label">Camera</span>
+          <select id="cameraSelect" class="select" aria-label="Select camera"></select>
+        </label>
+        <button id="torchBtn" class="btn btn--ghost" type="button" hidden>Torch</button>
+      </div>
+
+      <div class="viewport" id="viewport">
+        <video id="video" playsinline autoplay muted aria-label="Camera preview"></video>
+        <canvas id="frame" hidden></canvas>
+        <div class="reticle" id="reticle" aria-hidden="true"><span class="reticle__line"></span></div>
+        <div class="viewport__empty" id="scanIdle">
+          <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <p>Camera is off. Start it, or pick a QR image.</p>
+        </div>
+        <div class="scan-flash" id="scanFlash" aria-hidden="true"></div>
+      </div>
+
+      <div class="btn-row">
+        <button id="startBtn" class="btn btn--primary" type="button">Start camera</button>
+        <button id="stopBtn" class="btn btn--ghost" type="button" hidden>Stop</button>
+        <button id="uploadBtn" class="btn btn--ghost" type="button">Upload image</button>
+        <input id="fileInput" type="file" accept="image/*" hidden>
+      </div>
+      <p class="status" id="scanStatus" role="status" aria-live="polite">Ready.</p>
+    </div>
+
+    <div class="card" id="resultCard" hidden>
+      <div class="card__head">
+        <h2>Last result</h2>
+        <button class="icon-btn" id="closeResult" type="button" aria-label="Dismiss result">&times;</button>
+      </div>
+      <dl class="meta">
+        <dt>Format</dt><dd id="resFormat">—</dd>
+        <dt>When</dt><dd id="resTime">—</dd>
+        <dt>Source</dt><dd id="resSource">—</dd>
+      </dl>
+      <div class="code-preview" id="resPreview" hidden><img alt="Decoded QR/barcode payload preview"></div>
+      <textarea id="resText" class="code-text" readonly rows="4" aria-label="Decoded text"></textarea>
+      <div class="btn-row">
+        <button class="btn btn--small" id="copyRes" type="button">Copy</button>
+        <button class="btn btn--small btn--ghost" id="shareRes" type="button">Share</button>
+        <a class="btn btn--small btn--ghost" id="openRes" href="#" target="_blank" rel="noopener noreferrer" hidden>Open link</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= CREATE ======================= -->
+  <section class="panel" id="panel-create" role="tabpanel" aria-labelledby="tab-create" hidden>
+    <div class="card">
+      <label class="field">
+        <span class="field__label">Text (one entry per line for batch)</span>
+        <textarea id="genText" class="code-text" rows="5" placeholder="https://example.com&#10;WIFI:T:WPA;S:MyNet;P:secret;;" spellcheck="false"></textarea>
+      </label>
+
+      <div class="seg" role="group" aria-label="Code type">
+        <button class="seg__btn is-active" type="button" data-kind="qr">QR code</button>
+        <button class="seg__btn" type="button" data-kind="barcode">Barcode</button>
+      </div>
+
+      <div class="field-row" id="barcodeOpts">
+        <label class="field">
+          <span class="field__label">Symbology</span>
+          <select id="barcodeFormat" class="select">
+            <option value="CODE128" selected>CODE128 (any text)</option>
+            <option value="CODE128A">CODE128 A</option>
+            <option value="CODE128B">CODE128 B</option>
+            <option value="CODE128C">CODE128 C (digits)</option>
+            <option value="EAN13">EAN-13</option>
+            <option value="EAN8">EAN-8</option>
+            <option value="UPC">UPC-A</option>
+            <option value="UPCE">UPC-E</option>
+            <option value="CODE39">CODE39</option>
+            <option value="ITF14">ITF-14</option>
+            <option value="ITF">ITF (Interleaved 2 of 5)</option>
+            <option value="MSI">MSI</option>
+            <option value="pharmacode">Pharmacode</option>
+            <option value="codabar">Codabar</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">Module width <output id="scaleOut">2</output></span>
+          <input id="genScale" type="range" min="1" max="4" step="1" value="2">
+        </label>
+      </div>
+
+      <div class="field-row" id="qrOpts">
+        <label class="field">
+          <span class="field__label">Error correction</span>
+          <select id="qrEcl" class="select">
+            <option value="L">L &middot; 7%</option>
+            <option value="M" selected>M &middot; 15%</option>
+            <option value="Q">Q &middot; 25%</option>
+            <option value="H">H &middot; 30%</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">Size <output id="qrSizeOut">280</output>px</span>
+          <input id="qrSize" type="range" min="120" max="640" step="20" value="280">
+        </label>
+      </div>
+
+      <label class="check"><input type="checkbox" id="genQuiet" checked> Force 4-module quiet zone</label>
+      <label class="check"><input type="checkbox" id="genBatch"> Treat each line as a separate code</label>
+
+      <div class="btn-row">
+        <button id="genBtn" class="btn btn--primary" type="button">Generate</button>
+        <button id="dlPng" class="btn btn--ghost" type="button" hidden>Download PNG</button>
+        <button id="dlSvg" class="btn btn--ghost" type="button" hidden>Download SVG</button>
+        <button id="saveGen" class="btn btn--ghost" type="button" hidden>Save to history</button>
+      </div>
+      <p class="status" id="genStatus" role="status" aria-live="polite">&nbsp;</p>
+    </div>
+
+    <div class="card" id="genOut" hidden>
+      <div class="card__head">
+        <h2 id="genOutTitle">Generated</h2>
+        <span class="pill" id="genOutMeta">—</span>
+      </div>
+      <div class="gen-wrap" id="genWrap"></div>
+    </div>
+  </section>
+
+  <!-- ======================= HISTORY ======================= -->
+  <section class="panel" id="panel-history" role="tabpanel" aria-labelledby="tab-history" hidden>
+    <div class="card">
+      <div class="card__head">
+        <h2>Saved on this device</h2>
+        <span class="pill" id="histCount">0 items</span>
+      </div>
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label">Filter</span>
+          <input id="histSearch" class="input" type="search" placeholder="Search text, URL or format" autocomplete="off">
+        </label>
+        <button id="clearHist" class="btn btn--danger btn--ghost" type="button">Clear all</button>
+      </div>
+    </div>
+    <div id="histList" class="stack"></div>
+    <p class="empty" id="histEmpty" hidden>No history yet. Scan something, or save a generated code.</p>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="vendor/JsBarcode.all.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
