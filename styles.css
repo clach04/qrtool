@@ -107,8 +107,25 @@ h2 { font-size: 1rem; margin: 0; letter-spacing: .01em; }
   font-weight: 650;
   letter-spacing: -.01em;
   font-size: 1.02rem;
+  min-width: 0;
 }
-.logo { color: var(--brand); display: inline-flex; }
+.app-bar__title > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-bar .logo { color: var(--brand); display: inline-flex; flex: none; }
+
+/* --------------------------------- Install (PWA) button ---------------- */
+/* Hidden unless the browser fires beforeinstallprompt; the click handler is
+ * wired in app.js. */
+.app-bar #installBtn {
+  flex: none;
+  margin-left: auto;
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 650;
+}
+.app-bar #installBtn[hidden] { display: none; }
+.app-bar #installBtn[disabled] { opacity: .5; pointer-events: none; }
+.app-bar #themeBtn { flex: none; }
 
 .icon-btn {
   display: inline-grid;

@@ -3,10 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#2563eb">
 <meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)">
 <meta name="description" content="Offline single-page QR code scanner and QR/barcode generator with local history.">
 <title>QR &amp; Barcode Scanner</title>
+
+<!-- PWA: installable metadata + service worker registration. -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="application-name" content="Scan &amp; Create">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scan &amp; Create">
+<link rel="icon" type="image/svg+xml" href="icons/icon-maskable.svg">
+<link rel="apple-touch-icon" href="icons/icon-maskable.svg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cg fill='%23fff'%3E%3Cpath d='M6 6h8v8H6zm2 2v4h4V8z'/%3E%3Cpath d='M18 6h8v8h-8zm2 2v4h4V8z'/%3E%3Cpath d='M6 18h8v8H6zm2 2v4h4v-4z'/%3E%3Cpath d='M18 18h3v3h-3zm5 0h3v3h-3zm-5 5h3v3h-3zm5 0h3v3h-3z'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -19,6 +30,7 @@
     </span>
     <span>Scan &amp; Create</span>
   </div>
+  <button id="installBtn" class="btn btn--small" type="button" hidden>Install</button>
   <button id="themeBtn" class="icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle theme">
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 0 1 11.5 3.1c-.44-.06-.9-.1-1.36-.1z"/></svg>
   </button>

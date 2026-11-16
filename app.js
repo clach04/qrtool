@@ -1143,7 +1143,57 @@
     if (document.hidden && scanning) stopCamera(true);
   });
 
+  /* ===================================================================== PWA
+   * Registers the service worker (offline shell) and wires the install button.
+   * No-ops when the browser has neither — the app still runs fine online.
+   * Service workers require https:// or http://localhost, never file://.
+   */
+  var installPrompt = null;
+
+  function initPwa() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1' && location.hostname !== '[::1]') {
+      // Insecure origin (plain http on a LAN IP, or file://): no SW control.
+      return;
+    }
+    navigator.serviceWorker.register('sw.js').catch(function () {
+      // Registration failure is non-fatal; the app still works.
+    });
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+      // Suppress the browser's own mini-infobar; we show our own button.
+      e.preventDefault();
+      installPrompt = e;
+      var btn = $('installBtn');
+      if (btn) btn.hidden = false;
+    });
+
+    window.addEventListener('appinstalled', function () {
+      installPrompt = null;
+      var btn = $('installBtn');
+      if (btn) btn.hidden = true;
+      toast('Installed \u2014 launch it from your home screen');
+    });
+  }
+
+  if ($('installBtn')) {
+    $('installBtn').addEventListener('click', async function () {
+      if (!installPrompt) return;
+      var btn = $('installBtn');
+      btn.disabled = true;
+      try {
+        await installPrompt.prompt();
+        await installPrompt.userChoice;
+      } catch (e) { /* dismissed or unsupported */ }
+      installPrompt = null;
+      btn.disabled = false;
+      btn.hidden = true;
+    });
+  }
+
   /* ================================================================== START */
+  initPwa();
   loadHistory();
   refreshBadge();
   renderHistory();

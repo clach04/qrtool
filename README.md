@@ -12,6 +12,22 @@ A single-page, offline-first QR and barcode app for mobile browsers.
 No build step, no npm, no bundler, no network requests at runtime. Open
 `index.html` and it works — including from `file://`.
 
+## Install as an app (PWA)
+
+`index.html` is a PWA: it ships a web app manifest (`manifest.webmanifest`), a
+service worker (`sw.js`) that precaches the full app shell, and an app icon
+(`icons/icon-maskable.svg`). Served over **https** or **localhost**, the browser
+offers an "Install" button in the app bar; the app then launches in its own
+standalone window with no browser chrome, and works fully offline.
+
+Service workers and the install prompt require a secure origin, so `file://`
+and plain `http://` on a LAN address silently skip registration — the app still
+runs, just not installably. Test locally with `python3 -m http.server` and open
+`http://localhost:8000`.
+
+Bump `APP_VERSION` in `sw.js` when you change a precached file, otherwise
+installed clients keep the cached shell.
+
 ## Vendored libraries
 
 These are committed under `vendor/` so the app runs fully offline. Each file is

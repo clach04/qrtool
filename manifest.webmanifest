@@ -1,0 +1,24 @@
+{
+  "id": "/",
+  "name": "QR & Barcode Scanner",
+  "short_name": "Scan & Create",
+  "description": "Offline single-page QR code scanner and QR/barcode generator with local history.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f4f6f8",
+  "theme_color": "#2563eb",
+  "categories": ["utilities", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
